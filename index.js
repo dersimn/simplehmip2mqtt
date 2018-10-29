@@ -26,7 +26,7 @@ const config = require('yargs')
         name: 'hmip',
         'mqtt-url': 'mqtt://127.0.0.1',
         'polling-interval': 3000,
-        'listen-port': 2126
+        'listen-port': 3126
     })
     .version()
     .help('help')
@@ -154,6 +154,8 @@ const rpcMethods = {
         }
         log.debug('rpc < listDevices', params);
         log.debug('>', 0);
+        /* At least for the CCU2 (FW 2.35.16) the connection doesn't work without implementing `listDevices` method. However the CCU2 doesn't care if we return just an empty array.
+         */
         callback(null, []);
     }
 };
