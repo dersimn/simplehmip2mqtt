@@ -1,0 +1,27 @@
+{
+  "name": "simplehmip2mqtt",
+  "version": "0.0.1",
+  "description": "Simple Homematic IP bridge for mqtt-smarthome.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dersimn/simplehmip2mqtt.git"
+  },
+  "author": "Simon Christmann <simon@christmann.email>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dersimn/simplehmip2mqtt/issues"
+  },
+  "homepage": "https://github.com/dersimn/simplehmip2mqtt#readme",
+  "dependencies": {
+    "homematic-xmlrpc": "^1.0.2",
+    "mqtt-smarthome-connect": "0.0.6",
+    "shortid": "^2.2.13",
+    "yalm": "^4.1.0",
+    "yargs": "^12.0.1",
+    "yetanothertimerlibrary": "^2.1.0"
+  }
+}
