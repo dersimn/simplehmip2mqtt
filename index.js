@@ -170,7 +170,9 @@ mqtt.subscribe(config.name + "/set/+/+/+", (topic, message, wildcard) => {
 
     log.debug('rpc > setValue', serial, channel, datapoint, message);
 
-    methodCall('setValue', [serial+':'+channel, datapoint, String(message)]).catch(err => {
+    /* For rfd it's possible to wrap message in String(message). HmIP doesn't like this 'hack'. Sending the plain value might cause troubles when dealing with integer/float values. 
+     */
+    methodCall('setValue', [serial+':'+channel, datapoint, message]).catch(err => {
         log.error(err);
     });
 });
