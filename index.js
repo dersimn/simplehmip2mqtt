@@ -26,6 +26,10 @@ const config = require('yargs')
         'mqtt-url': 'mqtt://127.0.0.1',
         'listen-port': 3126
     })
+    .demandOption([
+        'ccu-address',
+        'init-address'
+    ])
     .version()
     .help('help')
     .argv;
