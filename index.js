@@ -37,6 +37,8 @@ const MqttSmarthome = require('mqtt-smarthome-connect');
 const xmlrpc = require('homematic-xmlrpc');
 const shortid = require('shortid');
 const Timer = require('yetanothertimerlibrary');
+const PQueue = require('p-queue');
+const queue = new PQueue({concurrency: 1});
 
 log.setLevel(config.verbosity);
 log.info(pkg.name + ' ' + pkg.version + ' starting');
@@ -193,6 +195,35 @@ var pingpong = new Timer(() => {
         log.error(err);
     });
 }).start(30*1000);
+
+/*
+    Send reportValueUsage for all ACTION-type paramsets (e.g. PRESS_SHORT). Homematic Classic didn't need this afaik.
+ */
+methodCall('listDevices', null).then((response) => {
+    response.forEach( ( device ) => {
+        queue.add(() => methodCall('getParamsetDescription', [device.ADDRESS, 'VALUES']).then((response) => {
+            Object.keys(response).forEach(paramset => {
+                if (response[paramset]['TYPE'] === 'ACTION') {
+                    queue.add(() => methodCall('reportValueUsage', [device.ADDRESS, paramset, 1]).then((response) => {
+                        log.debug('reportValueUsage', device.ADDRESS, paramset, response);
+                    }, (error) => {
+                        log.error('reportValueUsage', error);
+                    }));
+                }
+            });
+        }, (error) => {
+            log.error('getParamsetDescription', device.ADDRESS, 'VALUES', 'faultCode:', error.faultCode);
+        }));
+    });
+
+    queue.onEmpty().then(() => {
+        log.info('finished sending reportValueUsage requests');
+    }).catch((err) => {
+        log.error('collect queue error', err);
+    });
+}, (error) => {
+    log.error('listDevices', error);
+});
 
 function stop() {
     log.info('rpc', '> stop');

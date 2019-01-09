@@ -19,6 +19,7 @@
   "dependencies": {
     "homematic-xmlrpc": "^1.0.2",
     "mqtt-smarthome-connect": "0.0.6",
+    "p-queue": "^3.0.0",
     "shortid": "^2.2.13",
     "yalm": "^4.1.0",
     "yargs": "^12.0.1",
