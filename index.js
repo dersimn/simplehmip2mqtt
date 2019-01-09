@@ -8,7 +8,6 @@ const config = require('yargs')
     .describe('verbosity', 'possible values: "error", "warn", "info", "debug"')
     .describe('name', 'instance name. used as mqtt client id and as prefix for connected topic')
     .describe('mqtt-url', 'mqtt broker url. See https://github.com/mqttjs/MQTT.js#connect-using-a-url')
-    .describe('polling-interval', 'polling interval (in ms) for status updates')
     .describe('ccu-address', 'CCU address')
     .describe('init-address', 'Own IP for callbacks')
     .describe('listen-port', 'Own Port for callbacks')
@@ -25,7 +24,6 @@ const config = require('yargs')
     .default({
         name: 'hmip',
         'mqtt-url': 'mqtt://127.0.0.1',
-        'polling-interval': 3000,
         'listen-port': 3126
     })
     .version()
