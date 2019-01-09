@@ -170,7 +170,9 @@ mqtt.subscribe(config.name + "/set/+/+/+", (topic, message, wildcard) => {
 
     log.debug('rpc > setValue', serial, channel, datapoint, message);
 
-    /* For rfd it's possible to wrap message in String(message). HmIP doesn't like this 'hack'. Sending the plain value might cause troubles when dealing with integer/float values. 
+    /* 
+        For Homematic Classic's rfd it's possible to simply wrap the message in String(message) - see [this line](https://github.com/dersimn/simplehmrfd2mqtt/blob/40038dd7c038c2f8c2677a74928621471a789cdd/index.js#L162). The CCU exrtacted the proper value from this string no matter if the actual datatype of datapoint is string, boolean, enum or whatever.
+        Homematic IP's crRFD doesn't like this 'hack'. Sending the plain value might cause troubles when dealing with float values, because JavaScript doesn't make a difference between int/float. I currently have no device that expects a float value, to test this behaviour.
      */
     methodCall('setValue', [serial+':'+channel, datapoint, message]).catch(err => {
         log.error(err);
