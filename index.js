@@ -125,7 +125,7 @@ const rpcMethods = {
         }
         log.debug('rpc < event', JSON.stringify(params));
 
-        if (params[1] === 'CENTRAL' && params[2] === 'PONG') {
+        if (params[1] === 'CENTRAL:0' && params[2] === 'PONG') {
             if (typeof callback === 'function') {
                 callback(null, '');
             }
