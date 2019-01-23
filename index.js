@@ -203,11 +203,11 @@ methodCall('listDevices', null).then((response) => {
     response.forEach( ( device ) => {
         queue.add(() => methodCall('getParamsetDescription', [device.ADDRESS, 'VALUES']).then((response) => {
             Object.keys(response).forEach(paramset => {
-                if (response[paramset]['TYPE'] === 'ACTION') {
+                if (response[paramset]['OPERATIONS'] === 4) { // All datapoints that only communicate via events
                     queue.add(() => methodCall('reportValueUsage', [device.ADDRESS, paramset, 1]).then((response) => {
                         log.debug('reportValueUsage', device.ADDRESS, paramset, response);
                     }, (error) => {
-                        log.error('reportValueUsage', error);
+                        log.error('reportValueUsage', device.ADDRESS, paramset, error);
                     }));
                 }
             });
