@@ -156,8 +156,7 @@ const rpcMethods = {
             log.error(err);
             return;
         }
-        log.debug('rpc < listDevices', params);
-        log.debug('>', 0);
+        log.debug('rpc < listDevices', 0, params);
         /* At least for the CCU2 (FW 2.35.16) the connection doesn't work without implementing `listDevices` method. However the CCU2 doesn't care if we return just an empty array.
          */
         callback(null, []);
@@ -172,14 +171,14 @@ mqtt.subscribe(config.name + "/set/+/+/+", (topic, message, wildcard) => {
     const channel = wildcard[1];
     const datapoint = wildcard[2];
 
-    log.debug('rpc > setValue', serial, channel, datapoint, message);
-
     /* 
         For Homematic Classic's rfd it's possible to simply wrap the message in String(message) - see [this line](https://github.com/dersimn/simplehmrfd2mqtt/blob/40038dd7c038c2f8c2677a74928621471a789cdd/index.js#L162). The CCU exrtacted the proper value from this string no matter if the actual datatype of datapoint is string, boolean, enum or whatever.
         Homematic IP's crRFD doesn't like this 'hack'. Sending the plain value might cause troubles when dealing with float values, because JavaScript doesn't make a difference between int/float. I currently have no device that expects a float value, to test this behaviour.
      */
-    methodCall('setValue', [serial+':'+channel, datapoint, message]).catch(err => {
-        log.error(err);
+    methodCall('setValue', [serial+':'+channel, datapoint, message]).then(() => {
+        log.debug('rpc > setValue', serial, channel, datapoint, message);
+    }).catch(error => {
+        log.error('rpc > setValue', error.faultCode, error.faultString);
     });
 });
 
@@ -190,39 +189,42 @@ methodCall('init', ['http://'+config.initAddress+':'+config.listenPort, ownid]).
 var pingpong = new Timer(() => {
     let id = shortid.generate();
 
-    log.debug('rpc > ping', id);
-    methodCall('ping', [id]).catch(err => {
-        log.error(err);
+    methodCall('ping', [id]).then(() => {
+        log.debug('rpc > ping', id);
+    }).catch(error => {
+        log.error('rpc > ping', error.faultCode, error.faultString);
     });
 }).start(30*1000);
 
 /*
-    Send reportValueUsage for all ACTION-type paramsets (e.g. PRESS_SHORT). Homematic Classic didn't need this afaik.
+    Send reportValueUsage for all Event paramsets (e.g. PRESS_SHORT). Homematic Classic didn't need this afaik.
  */
 methodCall('listDevices', null).then((response) => {
+    log.debug('rpc > listDevices', response.length);
+
     response.forEach( ( device ) => {
         queue.add(() => methodCall('getParamsetDescription', [device.ADDRESS, 'VALUES']).then((response) => {
             Object.keys(response).forEach(paramset => {
-                if (response[paramset]['OPERATIONS'] === 4) { // All datapoints that only communicate via events
+                if (response[paramset]['OPERATIONS'] & 4) {
                     queue.add(() => methodCall('reportValueUsage', [device.ADDRESS, paramset, 1]).then((response) => {
                         log.debug('reportValueUsage', device.ADDRESS, paramset, response);
                     }, (error) => {
-                        log.error('reportValueUsage', device.ADDRESS, paramset, error);
+                        log.warn('reportValueUsage', device.ADDRESS, paramset, error.faultCode, error.faultString);
                     }));
                 }
             });
         }, (error) => {
-            log.error('getParamsetDescription', device.ADDRESS, 'VALUES', 'faultCode:', error.faultCode);
+            log.error('getParamsetDescription', device.ADDRESS, 'VALUES', error.faultCode, error.faultString);
         }));
     });
 
     queue.onEmpty().then(() => {
         log.info('finished sending reportValueUsage requests');
     }).catch((err) => {
-        log.error('collect queue error', err);
+        log.error('getParamsetDescription / reportValueUsage queue error', err);
     });
 }, (error) => {
-    log.error('listDevices', error);
+    log.error('rpc > listDevices', error.faultCode, error.faultString);
 });
 
 function stop() {
